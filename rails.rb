@@ -50,6 +50,16 @@ file '.bowerrc', <<-CODE
   "directory": "vendor/assets/bower_components"
 }
 CODE
+
+# .dockerignore
+file '.dockerignore', <<-CODE
+.bundle
+.git
+log
+tmp
+vendor
+CODE
+
 # .env
 file '.env',  <<-CODE
 PORT=3000
@@ -110,6 +120,10 @@ file 'bower.json', <<-CODE
 CODE
 # config/environments/development.rb
 run "echo 'STDOUT.sync = true' >> config/environments/development.rb"
+# Dockerfile
+file 'Dockerfile', <<-CODE
+FROM rails:onbuild
+CODE
 # Procfile
 run "echo 'web: bundle exec rails server -p $PORT' >> Procfile"
 
