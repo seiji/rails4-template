@@ -1,8 +1,9 @@
-SETUP_TEMPLATE_NAME = 'Rails4 Api Template'
+NAME_SETUP_TEMPLATE = 'Rails4 Api Template'
+PATH_TEMPLATES = File.join(File.dirname(__FILE__), 'templates')
+
 # Gems
 # ==================================================
 uncomment_lines 'Gemfile', "gem 'bcrypt'"
-uncomment_lines 'Gemfile', "gem 'capistrano-rails'"
 uncomment_lines 'Gemfile', "gem 'therubyracer'"
 uncomment_lines 'Gemfile', "gem 'unicorn'"
 
@@ -12,9 +13,6 @@ gem_group :development do
   gem 'rubocop'
   gem 'rspec-rails'
   gem 'guard-rspec'
-  gem 'capistrano'
-  gem 'capistrano-bundler'
-  gem 'capistrano-ext'
 end
 
 gem_group :test do
@@ -26,23 +24,22 @@ gem_group :test do
   # gem 'database_cleaner'
 end
 
-# .bundle/config
-run 'mkdir .bundle'
-file '.bundle/config', <<-CODE
----
-BUNDLE_PATH: .bundle/gems
-BUNDLE_DISABLE_SHARED_GEMS: '1'
-BUNDLE_BIN: .bundle/bin
-CODE
+# .bundle
+directory(File.join(PATH_TEMPLATES, '.bundle'), '.bundle')
 run 'bundle install'
+#
+[
+  '.bowerrc',
+  '.dockerignore',
+  '.env',
+  '.rubocop.yml',
+  'Dockerfile'
+].each do | n |
+  template File.join(PATH_TEMPLATES, n), n, {app_name: app_name}
+end
 
-# .env
-file '.env',  <<-CODE
-PORT=3000
-CODE
-
-comment_lines '.gitignore', '/.bundle'
 # .gitignore
+comment_lines '.gitignore', '/.bundle'
 run "cat << EOF >> .gitignore
 *.swp
 .bundle/bin
@@ -63,13 +60,7 @@ run "echo 'STDOUT.sync = true' >> config/environments/development.rb"
 # Procfile
 run "echo 'web: bundle exec rails server -p $PORT' >> Procfile"
 
-run 'bundle exec cap install'
 run 'bundle exec wheneverize .'
-# lib/capistrano/tasks/whenever.rake
-file 'lib/capistrano/tasks/whenever.rake', <<-CODE
-require 'whenever/capistrano'
-set :whenever_identifier, -> { "\#{fetch(:application)}_\#{fetch(:stage)}" }
-CODE
 
 run 'bundle exec guard init rspec'
 run 'bin/rails g rspec:install'
@@ -77,10 +68,6 @@ run 'bin/rails g rspec:install'
 
 # Rubocop
 run 'bundle exec rubocop --auto-gen-config'
-file '.rubocop.yml', <<-CODE
-inherit_from: .rubocop_todo.yml
-CODE
-
 run 'bundle exec spring binstub --all'
 
 # Git: Initialize
@@ -89,4 +76,4 @@ git :init
 git add: '.'
 git commit: %( -m 'Initial commit' )
 
-say_status :end, "#{SETUP_TEMPLATE_NAME} Complete!"
+say_status :end, "#{NAME_SETUP_TEMPLATE} Complete!"
